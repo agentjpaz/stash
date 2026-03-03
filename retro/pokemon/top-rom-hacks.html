@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TOP ROM HACKS DATABASE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Chakra+Petch:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --card: #13131e;
+    --border: #1e1e2e;
+    --gold: #f5c518;
+    --red: #e84040;
+    --cyan: #00e5ff;
+    --green: #39ff14;
+    --orange: #ff6b00;
+    --purple: #b44fff;
+    --text: #c8c8e0;
+    --dim: #5a5a7a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* CRT scanlines overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.15) 2px,
+      rgba(0,0,0,0.15) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  /* SVG noise */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.4;
+  }
+
+  .header {
+    text-align: center;
+    padding: 40px 20px 20px;
+    border-bottom: 2px solid var(--border);
+    position: relative;
+  }
+
+  .header-label {
+    font-family: 'VT323', monospace;
+    font-size: 14px;
+    color: var(--green);
+    letter-spacing: 4px;
+    margin-bottom: 10px;
+    animation: blink 1.5s infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .header h1 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(14px, 3vw, 26px);
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(245,197,24,0.6), 0 0 40px rgba(245,197,24,0.3);
+    line-height: 1.6;
+    letter-spacing: 2px;
+  }
+
+  .header-sub {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 13px;
+    color: var(--dim);
+    margin-top: 14px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  /* Platform tabs */
+  .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 16px 20px;
+    background: #0d0d16;
+    border-bottom: 2px solid var(--border);
+    justify-content: center;
+  }
+
+  .tab {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--dim);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 1px;
+    position: relative;
+    user-select: none;
+  }
+
+  .tab:hover {
+    color: var(--text);
+    border-color: var(--dim);
+  }
+
+  .tab.active {
+    color: var(--bg);
+    border-color: transparent;
+  }
+
+  .tab[data-platform="NES"].active { background: var(--red); color: #fff; box-shadow: 0 0 12px rgba(232,64,64,0.5); }
+  .tab[data-platform="GENESIS"].active { background: var(--cyan); color: #000; box-shadow: 0 0 12px rgba(0,229,255,0.5); }
+  .tab[data-platform="SNES"].active { background: var(--purple); color: #fff; box-shadow: 0 0 12px rgba(180,79,255,0.5); }
+  .tab[data-platform="GB"].active { background: var(--green); color: #000; box-shadow: 0 0 12px rgba(57,255,20,0.5); }
+  .tab[data-platform="GBC"].active { background: var(--orange); color: #fff; box-shadow: 0 0 12px rgba(255,107,0,0.5); }
+  .tab[data-platform="GBA"].active { background: var(--gold); color: #000; box-shadow: 0 0 12px rgba(245,197,24,0.5); }
+  .tab[data-platform="PS1"].active { background: var(--purple); color: #fff; box-shadow: 0 0 12px rgba(180,79,255,0.5); }
+
+  /* accent dots per tab */
+  .tab[data-platform="NES"] { border-top: 2px solid var(--red); }
+  .tab[data-platform="GENESIS"] { border-top: 2px solid var(--cyan); }
+  .tab[data-platform="SNES"] { border-top: 2px solid var(--purple); }
+  .tab[data-platform="GB"] { border-top: 2px solid var(--green); }
+  .tab[data-platform="GBC"] { border-top: 2px solid var(--orange); }
+  .tab[data-platform="GBA"] { border-top: 2px solid var(--gold); }
+  .tab[data-platform="PS1"] { border-top: 2px solid var(--purple); }
+
+  /* Main content */
+  .content {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+
+  .platform-section { display: none; }
+  .platform-section.active { display: block; }
+
+  .platform-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .platform-badge {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    padding: 6px 12px;
+    letter-spacing: 2px;
+  }
+
+  .platform-desc {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 13px;
+    color: var(--dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* ROM hack cards */
+  .hacks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+  }
+
+  .hack-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 16px;
+    position: relative;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    cursor: default;
+  }
+
+  .hack-card:hover {
+    border-color: var(--dim);
+    box-shadow: 0 0 16px rgba(0,0,0,0.6);
+  }
+
+  .hack-rank {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: var(--dim);
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    letter-spacing: 1px;
+  }
+
+  .hack-type-badge {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    margin-bottom: 10px;
+    display: inline-block;
+  }
+
+  .hack-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    line-height: 1.7;
+    color: #fff;
+    margin-bottom: 8px;
+    padding-right: 30px;
+  }
+
+  .hack-base {
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    color: var(--dim);
+    margin-bottom: 10px;
+  }
+
+  .hack-base span {
+    color: var(--text);
+  }
+
+  .hack-desc {
+    font-family: 'VT323', monospace;
+    font-size: 17px;
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  .pip-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .pip-label {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 1px;
+    width: 60px;
+    flex-shrink: 0;
+  }
+
+  .pips {
+    display: flex;
+    gap: 3px;
+  }
+
+  .pip {
+    width: 10px;
+    height: 10px;
+    border: 1px solid currentColor;
+    opacity: 0.3;
+  }
+
+  .pip.filled {
+    opacity: 1;
+  }
+
+  /* type colors */
+  .type-new { background: rgba(232,64,64,0.15); color: var(--red); border: 1px solid rgba(232,64,64,0.3); }
+  .type-qol { background: rgba(57,255,20,0.1); color: var(--green); border: 1px solid rgba(57,255,20,0.3); }
+  .type-overhaul { background: rgba(180,79,255,0.12); color: var(--purple); border: 1px solid rgba(180,79,255,0.3); }
+  .type-crossover { background: rgba(0,229,255,0.1); color: var(--cyan); border: 1px solid rgba(0,229,255,0.3); }
+  .type-fix { background: rgba(245,197,24,0.1); color: var(--gold); border: 1px solid rgba(245,197,24,0.3); }
+  .type-difficulty { background: rgba(255,107,0,0.1); color: var(--orange); border: 1px solid rgba(255,107,0,0.3); }
+
+  /* pip color per platform */
+  .nes-pip { color: var(--red); }
+  .gen-pip { color: var(--cyan); }
+  .snes-pip { color: var(--purple); }
+  .gb-pip { color: var(--green); }
+  .gbc-pip { color: var(--orange); }
+  .gba-pip { color: var(--gold); }
+  .ps1-pip { color: var(--purple); }
+
+  .stat-row {
+    display: flex;
+    gap: 16px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* footer */
+  .footer {
+    text-align: center;
+    padding: 20px;
+    border-top: 1px solid var(--border);
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 11px;
+    color: var(--dim);
+    letter-spacing: 2px;
+  }
+
+  .ps1-note {
+    background: rgba(180,79,255,0.08);
+    border: 1px solid rgba(180,79,255,0.2);
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    font-family: 'VT323', monospace;
+    font-size: 17px;
+    color: var(--purple);
+    line-height: 1.5;
+  }
+
+  .ps1-note strong {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    display: block;
+    margin-bottom: 6px;
+    color: var(--purple);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-label">&gt;&gt; ROMHACK_DB v3.2 // LOADING... ██████████ 100%</div>
+  <h1>TOP ROM HACKS<br>DATABASE</h1>
+  <div class="header-sub">NES · Genesis · SNES · GB · GBC · GBA · PS1 // Community Compiled</div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" data-platform="NES" onclick="switchTab('NES', this)">NES</div>
+  <div class="tab" data-platform="GENESIS" onclick="switchTab('GENESIS', this)">GENESIS</div>
+  <div class="tab" data-platform="SNES" onclick="switchTab('SNES', this)">SNES</div>
+  <div class="tab" data-platform="GB" onclick="switchTab('GB', this)">GAME BOY</div>
+  <div class="tab" data-platform="GBC" onclick="switchTab('GBC', this)">GBC</div>
+  <div class="tab" data-platform="GBA" onclick="switchTab('GBA', this)">GBA</div>
+  <div class="tab" data-platform="PS1" onclick="switchTab('PS1', this)">PS1</div>
+</div>
+
+<div class="content">
+
+  <!-- ============ NES ============ -->
+  <div class="platform-section active" id="NES">
+    <div class="platform-header">
+      <div class="platform-badge" style="background:var(--red);color:#fff;">NES</div>
+      <div class="platform-desc">Nintendo Entertainment System // 8-BIT ERA // 6502 CPU</div>
+    </div>
+    <div class="hacks-grid">
+
+      <div class="hack-card">
+        <div class="hack-rank">#01</div>
+        <div class="hack-type-badge type-new">NEW GAME</div>
+        <div class="hack-title">METROID: DAWN ARAN</div>
+        <div class="hack-base">Base: <span>Metroid</span></div>
+        <div class="hack-desc">A full prequel detailing how Ridley stole the Metroids. New protagonist, entirely new assets, chiptune score. Widely considered the single best NES hack ever made.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">SCOPE</div><div class="pips nes-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+          <div class="pip-bar"><div class="pip-label">POLISH</div><div class="pips nes-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#02</div>
+        <div class="hack-type-badge type-overhaul">OVERHAUL</div>
+        <div class="hack-title">ZELDA CHALLENGE: OUTLANDS</div>
+        <div class="hack-base">Base: <span>Legend of Zelda</span></div>
+        <div class="hack-desc">Completely redrawn overworld, all-new dungeons, re-colored enemies with improved animations. Feels like a full sequel. One of the most comprehensive Zelda hacks ever.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">SCOPE</div><div class="pips nes-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip"></div></div></div>
+          <div class="pip-bar"><div class="pip-label">DIFFICULTY</div><div class="pips nes-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#03</div>
+        <div class="hack-type-badge type-crossover">CROSSOVER</div>
+        <div class="hack-title">MEGA MAN IN THE MUSHROOM KINGDOM</div>
+        <div class="hack-base">Base: <span>Super Mario Bros.</span></div>
+        <div class="hack-desc">Replaces Mario with Mega Man, complete with his signature abilities and weapons. A seamless mashup of two iconic NES franchises that actually works brilliantly.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">FUN</div><div class="pips nes-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#04</div>
+        <div class="hack-type-badge type-qol">CO-OP</div>
+        <div class="hack-title">SMB 2-PLAYER HACK</div>
+        <div class="hack-base">Base: <span>Super Mario Bros.</span></div>
+        <div class="hack-desc">Enables simultaneous 2-player co-op as Mario & Luigi. No level changes — just the original game made properly multiplayer. Simple concept, massive fun improvement.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">POLISH</div><div class="pips nes-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#05</div>
+        <div class="hack-type-badge type-new">NEW GAME</div>
+        <div class="hack-title">CASTLEVANIA: CHORUS OF MYSTERIES</div>
+        <div class="hack-base">Base: <span>Castlevania</span></div>
+        <div class="hack-desc">New protagonist Armund faces Count Orlox instead of Dracula. New stages, enemies, and clever mechanics make this a near-professional-quality NES entry in the series.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">SCOPE</div><div class="pips nes-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#06</div>
+        <div class="hack-type-badge type-new">NEW GAME</div>
+        <div class="hack-title">ROYAL FLUSH: PRINCESS SIDESTORY</div>
+        <div class="hack-base">Base: <span>Super Mario Bros. 3</span></div>
+        <div class="hack-desc">Play as Peach (and Daisy as Luigi) across all-new levels in a cursed board game world. New themes, bomb flowers, and mechanics throughout a fully realized alternate SMB3.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">CREATIVITY</div><div class="pips nes-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#07</div>
+        <div class="hack-type-badge type-overhaul">OVERHAUL</div>
+        <div class="hack-title">MEGA MAN 4 MINUS INFINITY</div>
+        <div class="hack-base">Base: <span>Mega Man 4</span></div>
+        <div class="hack-desc">Entirely new levels, remixed bosses with new weapons and attack patterns, branching paths with optional bosses ported from other MM games. A masterclass of NES hacking.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">DIFFICULTY</div><div class="pips nes-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#08</div>
+        <div class="hack-type-badge type-new">NEW GAME</div>
+        <div class="hack-title">CASTLEVANIA: THE HOLY RELICS</div>
+        <div class="hack-base">Base: <span>Castlevania</span></div>
+        <div class="hack-desc">A direct sequel picking up after the original. Five custom stages against necromancer Lord Ghoulash with all-new vibrant visuals, items, and enemies. The sequel Konami never made.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">SCOPE</div><div class="pips nes-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip"></div></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ GENESIS ============ -->
+  <div class="platform-section" id="GENESIS">
+    <div class="platform-header">
+      <div class="platform-badge" style="background:var(--cyan);color:#000;">GENESIS</div>
+      <div class="platform-desc">Sega Mega Drive / Genesis // 16-BIT // BLAST PROCESSING</div>
+    </div>
+    <div class="hacks-grid">
+
+      <div class="hack-card">
+        <div class="hack-rank">#01</div>
+        <div class="hack-type-badge type-fix">DEFINITIVE</div>
+        <div class="hack-title">SONIC 3 COMPLETE</div>
+        <div class="hack-base">Base: <span>Sonic 3 + Sonic & Knuckles</span></div>
+        <div class="hack-desc">Merges both cartridges into one unified, polished experience with improved graphics and smoother gameplay. The definitive way to play these two classic titles without the physical lock-on trick.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">POLISH</div><div class="pips gen-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#02</div>
+        <div class="hack-type-badge type-crossover">CROSSOVER</div>
+        <div class="hack-title">TMNT: SHREDDER'S RE-REVENGE</div>
+        <div class="hack-base">Base: <span>Streets of Rage 2</span></div>
+        <div class="hack-desc">Complete character, enemy, and story overhaul using sprites from Shredder's Revenge. Play as Raph, Leo, Donnie, Mikey, April, Splinter & Casey Jones. Optional Turbo Mode & 6-button support.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">SCOPE</div><div class="pips gen-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+          <div class="pip-bar"><div class="pip-label">FUN</div><div class="pips gen-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#03</div>
+        <div class="hack-type-badge type-fix">ENHANCEMENT</div>
+        <div class="hack-title">STREET FIGHTER II: REMASTERED</div>
+        <div class="hack-base">Base: <span>SF II: Champion Edition</span></div>
+        <div class="hack-desc">Four years of painstaking work by Gabriel Pyron. Brings the Genesis port up to SNES parity and beyond — improved graphics, sound, balance, and a host of gameplay enhancements.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">POLISH</div><div class="pips gen-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#04</div>
+        <div class="hack-type-badge type-fix">ENHANCEMENT</div>
+        <div class="hack-title">CASTLEVANIA BLOODLINES: ENHANCED COLORS</div>
+        <div class="hack-base">Base: <span>Castlevania: Bloodlines</span></div>
+        <div class="hack-desc">Reworks the color palette for a more authentic, ancient, and stylish look. Character, enemy sprite makeovers, and shading enhancements add real depth without touching gameplay.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">POLISH</div><div class="pips gen-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#05</div>
+        <div class="hack-type-badge type-fix">IMPROVEMENT</div>
+        <div class="hack-title">ROAD RASH 3: IMPROVEMENT</div>
+        <div class="hack-base">Base: <span>Road Rash III</span></div>
+        <div class="hack-desc">Fixes the notoriously poor framerate, adds 6-button controller support, bug fixes, and MP3 audio support via Mednafen. Transforms an already great game into a genuinely smooth experience.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">QOL</div><div class="pips gen-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#06</div>
+        <div class="hack-type-badge type-new">PORT</div>
+        <div class="hack-title">MEGA FINAL FIGHT</div>
+        <div class="hack-base">Base: <span>Original / Genesis Homebrew</span></div>
+        <div class="hack-desc">The port that never was — a passion project bringing the full arcade Final Fight to the Genesis with all characters and stages, pushing the hardware beyond its peak-era limits.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">AMBITION</div><div class="pips gen-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#07</div>
+        <div class="hack-type-badge type-fix">BALANCE</div>
+        <div class="hack-title">ETERNAL CHAMPIONS: SPECIAL EDITION</div>
+        <div class="hack-base">Base: <span>Eternal Champions</span></div>
+        <div class="hack-desc">Rebalances the Inner Strength system, optimizes stage overkills, tweaks character stats for fairness, and reworks hit stun for Killer Instinct-style combo potential.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">BALANCE</div><div class="pips gen-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#08</div>
+        <div class="hack-type-badge type-crossover">CROSSOVER</div>
+        <div class="hack-title">SONIC STREETS OF RAGE 2</div>
+        <div class="hack-base">Base: <span>Streets of Rage 2</span></div>
+        <div class="hack-desc">Replaces all SoR2 characters and goons with Sonic universe cast. Play as Tails, Sonic, Amy, and Shadow through recognizable Sega stages — oddly charming and genuinely fun.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">FUN</div><div class="pips gen-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip"></div></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ SNES ============ -->
+  <div class="platform-section" id="SNES">
+    <div class="platform-header">
+      <div class="platform-badge" style="background:var(--purple);color:#fff;">SNES</div>
+      <div class="platform-desc">Super Nintendo // 16-BIT // Mode 7 // The Golden Age</div>
+    </div>
+    <div class="hacks-grid">
+
+      <div class="hack-card">
+        <div class="hack-rank">#01</div>
+        <div class="hack-type-badge type-overhaul">OVERHAUL</div>
+        <div class="hack-title">ZELDA: PARALLEL WORLDS</div>
+        <div class="hack-base">Base: <span>A Link to the Past</span></div>
+        <div class="hack-desc">New plot, entirely redesigned dungeons, brutal difficulty. Plays and feels like a completely different game. One of the most ambitious SNES hacks ever created — not for beginners.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">DIFFICULTY</div><div class="pips snes-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+          <div class="pip-bar"><div class="pip-label">SCOPE</div><div class="pips snes-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#02</div>
+        <div class="hack-type-badge type-new">NEW GAME</div>
+        <div class="hack-title">EARTHBOUND: HALLOWEEN HACK</div>
+        <div class="hack-base">Base: <span>Earthbound / MOTHER 2</span></div>
+        <div class="hack-desc">By Toby Fox, pre-Undertale. Silent Hill meets GTA in the EarthBound engine. Dark, disturbing, and genuinely well-crafted. Features the first appearance of Megalovania / Sans' theme.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">LORE VALUE</div><div class="pips snes-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#03</div>
+        <div class="hack-type-badge type-fix">RANDOMIZER</div>
+        <div class="hack-title">ALTTP RANDOMIZER</div>
+        <div class="hack-base">Base: <span>A Link to the Past</span></div>
+        <div class="hack-desc">Shuffles key item locations so the Master Sword or Fire Rod could appear in the very first chest. Every run is different. One of the most-played SNES hacks among streamers and speedrunners.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">REPLAY</div><div class="pips snes-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#04</div>
+        <div class="hack-type-badge type-overhaul">MASHUP</div>
+        <div class="hack-title">SUPER METROID × ZERO MISSION</div>
+        <div class="hack-base">Base: <span>Super Metroid</span></div>
+        <div class="hack-desc">Blends stylistic choices from Super Metroid and Metroid: Zero Mission into a highly polished new experience. Rewards exploration, challenging but fair, accessible to average players.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">POLISH</div><div class="pips snes-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#05</div>
+        <div class="hack-type-badge type-new">NEW GAME</div>
+        <div class="hack-title">SMW: RETURN TO DINOSAUR LAND</div>
+        <div class="hack-base">Base: <span>Super Mario World</span></div>
+        <div class="hack-desc">SMW's true unofficial sequel. Laser-focused on level design over gimmicks — no story overhaul, just incredibly crafted stages that feel like a natural evolution of the original game.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">LEVEL DESIGN</div><div class="pips snes-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#06</div>
+        <div class="hack-type-badge type-crossover">CROSSOVER</div>
+        <div class="hack-title">HYPER STREET KART</div>
+        <div class="hack-base">Base: <span>Super Mario Kart</span></div>
+        <div class="hack-desc">Replaces every Mario Kart racer with Street Fighter II characters. A simple but inspired crossover that gives the SNES Mario Kart engine an unexpected new lease of life.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">FUN</div><div class="pips snes-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#07</div>
+        <div class="hack-type-badge type-new">EXPANSION</div>
+        <div class="hack-title">CHRONO TRIGGER: PROPHET'S GUILE</div>
+        <div class="hack-base">Base: <span>Chrono Trigger</span></div>
+        <div class="hack-desc">An expansion that follows Magus as he rises to power in the Kingdom of Zeal. Well-written, lore-faithful, and an excellent companion piece to one of the SNES's best RPGs.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">STORY</div><div class="pips snes-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#08</div>
+        <div class="hack-type-badge type-fix">RESTORATION</div>
+        <div class="hack-title">FF6: BRAVE NEW WORLD</div>
+        <div class="hack-base">Base: <span>Final Fantasy VI</span></div>
+        <div class="hack-desc">Makes every character unique and useful with rebalanced abilities. A sweet-spot difficulty that isn't punishing but makes every encounter meaningful. Considered by many to exceed the original.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">BALANCE</div><div class="pips snes-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ GAME BOY ============ -->
+  <div class="platform-section" id="GB">
+    <div class="platform-header">
+      <div class="platform-badge" style="background:var(--green);color:#000;">GAME BOY</div>
+      <div class="platform-desc">Original DMG / Game Boy // 8-BIT // 4 SHADES OF GREEN</div>
+    </div>
+    <div class="hacks-grid">
+
+      <div class="hack-card">
+        <div class="hack-rank">#01</div>
+        <div class="hack-type-badge type-overhaul">COLORIZATION</div>
+        <div class="hack-title">LINK'S AWAKENING DX: LOST LEVELS</div>
+        <div class="hack-base">Base: <span>Zelda: Link's Awakening DX</span></div>
+        <div class="hack-desc">Returns to Koholint Island with additional dungeons and new challenges layered onto the already rich GBC port, deepening the narrative without breaking the original's charm.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">POLISH</div><div class="pips gb-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#02</div>
+        <div class="hack-type-badge type-overhaul">FAN REMAKE</div>
+        <div class="hack-title">METROID II: RETURN OF SAMUS REMAKE</div>
+        <div class="hack-base">Base: <span>Metroid II: Return of Samus</span></div>
+        <div class="hack-desc">Dramatically elevated visuals while preserving core gameplay of the original Game Boy title. A striking demonstration of how nostalgia and innovation can coexist in a single fan project.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">VISUALS</div><div class="pips gb-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#03</div>
+        <div class="hack-type-badge type-fix">ENHANCEMENT</div>
+        <div class="hack-title">CASTLEVANIA ADVENTURE: SPEED & WHIP HACK</div>
+        <div class="hack-base">Base: <span>Castlevania Adventure</span></div>
+        <div class="hack-desc">Fixes the two biggest pain points of the Adventure: glacial movement speed and the punishing whip power loss on damage. Transforms a flawed gem into a playable classic.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">QOL</div><div class="pips gb-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#04</div>
+        <div class="hack-type-badge type-overhaul">COLORIZATION</div>
+        <div class="hack-title">GB COLORIZATION HACKS</div>
+        <div class="hack-base">Base: <span>Various DMG Games</span></div>
+        <div class="hack-desc">Fan-made GBC colorizations of original Game Boy games. A growing scene that applies proper color palettes to DMG classics, making them feel like they were always meant to be in color.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">VISUALS</div><div class="pips gb-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip"></div></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ GBC ============ -->
+  <div class="platform-section" id="GBC">
+    <div class="platform-header">
+      <div class="platform-badge" style="background:var(--orange);color:#fff;">GBC</div>
+      <div class="platform-desc">Game Boy Color // 8-BIT+ // 56 COLOR PALETTE</div>
+    </div>
+    <div class="hacks-grid">
+
+      <div class="hack-card">
+        <div class="hack-rank">#01</div>
+        <div class="hack-type-badge type-new">NEW GAME</div>
+        <div class="hack-title">POKÉMON PRISM</div>
+        <div class="hack-base">Base: <span>Pokémon Crystal</span></div>
+        <div class="hack-desc">Introduces the new Naljo region, Pokémon types from later gens, 2D sidescrolling dungeons, character customization, and innovations that make it feel like a GBA title. The crown jewel of GBC hacking.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">SCOPE</div><div class="pips gbc-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+          <div class="pip-bar"><div class="pip-label">INNOVATION</div><div class="pips gbc-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#02</div>
+        <div class="hack-type-badge type-fix">OPEN WORLD</div>
+        <div class="hack-title">POKÉMON CRYSTAL CLEAR</div>
+        <div class="hack-base">Base: <span>Pokémon Crystal</span></div>
+        <div class="hack-desc">Choose your starting location anywhere in Kanto or Johto. Challenge gyms in any order with scaling difficulty. A true open-world Pokémon experience 20+ years before Nintendo attempted it.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">REPLAY</div><div class="pips gbc-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#03</div>
+        <div class="hack-type-badge type-fix">QOL OVERHAUL</div>
+        <div class="hack-title">POKÉMON POLISHED CRYSTAL</div>
+        <div class="hack-base">Base: <span>Pokémon Crystal</span></div>
+        <div class="hack-desc">Improves trainer rosters, adds legacy evolutions, incorporates QoL from later gens, adds new events, and improves AI & leveling curve. The definitive way to replay Crystal.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">POLISH</div><div class="pips gbc-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#04</div>
+        <div class="hack-type-badge type-fix">COMPLETION</div>
+        <div class="hack-title">POKÉMON PERFECT CRYSTAL</div>
+        <div class="hack-base">Base: <span>Pokémon Crystal</span></div>
+        <div class="hack-desc">Enables catching, evolving, and using all 251 Gen 1 & 2 Pokémon without trading. Faithful to the original structure — just removes the artificial barriers that required a second cartridge.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">QOL</div><div class="pips gbc-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#05</div>
+        <div class="hack-type-badge type-new">NEW GAME</div>
+        <div class="hack-title">POKÉMON GOLD & SILVER 97</div>
+        <div class="hack-base">Base: <span>Pokémon Crystal</span></div>
+        <div class="hack-desc">Based on the legendary 1997 Space World demo build of Gold & Silver. Features the lost beta Pokémon and early designs in a playable complete form. Essential for Pokémon history enthusiasts.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">LORE VALUE</div><div class="pips gbc-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#06</div>
+        <div class="hack-type-badge type-difficulty">DIFFICULTY</div>
+        <div class="hack-title">POKÉMON BLUE KAIZO</div>
+        <div class="hack-base">Base: <span>Pokémon Blue</span></div>
+        <div class="hack-desc">Crushingly difficult rebalance of the original Gen 1 game using the engine's many quirks against you. Not for the faint-hearted — victory requires deep mechanical knowledge of RBY.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">DIFFICULTY</div><div class="pips gbc-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ GBA ============ -->
+  <div class="platform-section" id="GBA">
+    <div class="platform-header">
+      <div class="platform-badge" style="background:var(--gold);color:#000;">GBA</div>
+      <div class="platform-desc">Game Boy Advance // 32-BIT // ARM7TDMI // Pocket Powerhouse</div>
+    </div>
+    <div class="hacks-grid">
+
+      <div class="hack-card">
+        <div class="hack-rank">#01</div>
+        <div class="hack-type-badge type-overhaul">FLAGSHIP</div>
+        <div class="hack-title">POKÉMON UNBOUND</div>
+        <div class="hack-base">Base: <span>Pokémon FireRed</span></div>
+        <div class="hack-desc">The top GBA Pokémon hack since 2021. New regions, side quests, Z Moves, Mega Evolution (v2), updated graphics, and a fully realized story. Considered feature-complete and brilliantly polished.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">SCOPE</div><div class="pips gba-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+          <div class="pip-bar"><div class="pip-label">POLISH</div><div class="pips gba-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#02</div>
+        <div class="hack-type-badge type-difficulty">DIFFICULTY</div>
+        <div class="hack-title">POKÉMON RADICAL RED</div>
+        <div class="hack-base">Base: <span>Pokémon FireRed</span></div>
+        <div class="hack-desc">Brutal difficulty rebalance with updated movesets, abilities, and a Pokémon navigator system. Every battle requires planning. Widely regarded as the definitive challenge hack for competitive players.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">DIFFICULTY</div><div class="pips gba-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#03</div>
+        <div class="hack-type-badge type-new">CONVERSION</div>
+        <div class="hack-title">PC DOOM: TOTAL CONVERSION</div>
+        <div class="hack-base">Base: <span>Doom GBA</span></div>
+        <div class="hack-desc">Recreates the original PC Doom on GBA — correct textures, proper music per level, restored red blood, and improved framerate. A technical marvel that surpasses the official GBA port in every way.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">TECH</div><div class="pips gba-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#04</div>
+        <div class="hack-type-badge type-new">EXPANSION</div>
+        <div class="hack-title">CASTLEVANIA: ARIA OF SORROW ALTER</div>
+        <div class="hack-base">Base: <span>Castlevania: Aria of Sorrow</span></div>
+        <div class="hack-desc">Complete castle overhaul with new level design, engaging puzzles, and interesting mechanics. For Aria fans who have cleared the original and want more intelligent Metroidvania content.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">LEVEL DESIGN</div><div class="pips gba-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#05</div>
+        <div class="hack-type-badge type-new">STRATEGY</div>
+        <div class="hack-title">ADVANCE WARS RETURNS</div>
+        <div class="hack-base">Base: <span>Advance Wars</span></div>
+        <div class="hack-desc">Two years of development by fans. Adds new maps, new gameplay mechanics, and a completely rewritten storyline to the already near-perfect GBA strategy title. The definitive AW experience.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">SCOPE</div><div class="pips gba-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#06</div>
+        <div class="hack-type-badge type-fix">RESTORATION</div>
+        <div class="hack-title">SMA4: ALL 38 E-READER LEVELS</div>
+        <div class="hack-base">Base: <span>Super Mario Advance 4: SMB3</span></div>
+        <div class="hack-desc">Adds the 38 Japan-exclusive e-Reader bonus levels that never launched in the West. Preserves and delivers content that would otherwise be permanently inaccessible without original hardware and cards.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">PRESERVATION</div><div class="pips gba-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#07</div>
+        <div class="hack-type-badge type-new">NARRATIVE</div>
+        <div class="hack-title">FE: THE LAST PROMISE</div>
+        <div class="hack-base">Base: <span>Fire Emblem (GBA)</span></div>
+        <div class="hack-desc">The first completed English Fire Emblem ROM hack. Fan-created story with genuine plot twists and writing quality that rivals official entries. An impressive standalone tactical RPG experience.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">STORY</div><div class="pips gba-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#08</div>
+        <div class="hack-type-badge type-new">NEW GAME</div>
+        <div class="hack-title">POKÉMON GAIA</div>
+        <div class="hack-base">Base: <span>Pokémon FireRed</span></div>
+        <div class="hack-desc">Archaeological themes set in the ancient Orbtus region. Features Mega Evolutions, Pokémon up to Gen 6, a genuinely compelling storyline, and consistently praised level and world design.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">POLISH</div><div class="pips gba-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ PS1 ============ -->
+  <div class="platform-section" id="PS1">
+    <div class="platform-header">
+      <div class="platform-badge" style="background:var(--purple);color:#fff;">PS1</div>
+      <div class="platform-desc">Sony PlayStation // 32-BIT // MIPS R3000A // CD-ROM</div>
+    </div>
+    <div class="ps1-note">
+      <strong>// SYSTEM NOTE</strong>
+      The PS1 has a significantly smaller ROM hacking scene compared to cartridge-based systems. CD-ROM complexity, disc format overhead, and limited debugging tools make deep hacks rare. The community is smaller but dedicated — and the hacks that do exist tend to be high-effort translations, enhancement patches, or notable QoL fixes. Fan translations from Japanese are a major strength of the PS1 scene.
+    </div>
+    <div class="hacks-grid">
+
+      <div class="hack-card">
+        <div class="hack-rank">#01</div>
+        <div class="hack-type-badge type-fix">RESTORATION</div>
+        <div class="hack-title">RESIDENT EVIL: TRUE DIRECTOR'S CUT</div>
+        <div class="hack-base">Base: <span>Resident Evil Director's Cut</span></div>
+        <div class="hack-desc">Restores the full-color FMVs that were removed from the Director's Cut release. Considered by fans to be the definitive way to experience the original RE1 on PS1 hardware and emulators.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">POLISH</div><div class="pips ps1-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#02</div>
+        <div class="hack-type-badge type-fix">TRANSLATION</div>
+        <div class="hack-title">FINAL FANTASY TACTICS: PSP TRANSLATION PORT</div>
+        <div class="hack-base">Base: <span>Final Fantasy Tactics (PS1)</span></div>
+        <div class="hack-desc">Backports the beloved PSP War of the Lions translation to the original PS1 version, giving players the superior script without the infamous slowdown that plagued the handheld port.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">QOL</div><div class="pips ps1-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#03</div>
+        <div class="hack-type-badge type-difficulty">CHALLENGE</div>
+        <div class="hack-title">FF TACTICS: HARD MODE / 1.3 MOD</div>
+        <div class="hack-base">Base: <span>Final Fantasy Tactics (PS1)</span></div>
+        <div class="hack-desc">Overhauls AI, status mechanics, and story battles with scaling enemies. A dramatically harder but fairer rebalance that demands tactical mastery from players who've cleared the original.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">DIFFICULTY</div><div class="pips ps1-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#04</div>
+        <div class="hack-type-badge type-fix">QOL</div>
+        <div class="hack-title">SOTN: RANDOMIZER</div>
+        <div class="hack-base">Base: <span>Castlevania: Symphony of the Night</span></div>
+        <div class="hack-desc">Area and item randomizer that reshuffles SotN's entire structure for endless replayability. Also includes a Richter Randomizer mode. One of the most technically impressive PS1 hacking achievements.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">REPLAY</div><div class="pips ps1-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#05</div>
+        <div class="hack-type-badge type-difficulty">CHALLENGE</div>
+        <div class="hack-title">SOTN: HARD TYPE</div>
+        <div class="hack-base">Base: <span>Castlevania: Symphony of the Night</span></div>
+        <div class="hack-desc">A difficulty overhaul for SotN veterans who want the castle to fight back. Tougher enemies, adjusted item economy, and more demanding boss encounters throughout the full game.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">DIFFICULTY</div><div class="pips ps1-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hack-card">
+        <div class="hack-rank">#06</div>
+        <div class="hack-type-badge type-fix">ENHANCEMENT</div>
+        <div class="hack-title">RE SURVIVOR: LIGHT GUN SUPPORT</div>
+        <div class="hack-base">Base: <span>Resident Evil Survivor</span></div>
+        <div class="hack-desc">Patches in full GunCon light gun support for the PAL and NTSC versions of RE Survivor that had it removed. Restores the game to its intended arcade-style play experience.</div>
+        <div class="stat-row">
+          <div class="pip-bar"><div class="pip-label">QOL</div><div class="pips ps1-pip"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip"></div></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /content -->
+
+<div class="footer">
+  ROMHACK_DB // DATA COMPILED FROM COMMUNITY SOURCES // ROMHACKING.NET // RETRODODO // FANDOMSPOT // GBATEMP
+  <br>ROM hacks are patches only. You must legally own original game ROMs to apply them.
+</div>
+
+<script>
+function switchTab(platform, el) {
+  // deactivate all tabs & sections
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.platform-section').forEach(s => s.classList.remove('active'));
+  // activate selected
+  el.classList.add('active');
+  document.getElementById(platform).classList.add('active');
+}
+</script>
+</body>
+</html>

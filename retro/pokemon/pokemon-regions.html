@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pokémon Regions — Field Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Chakra+Petch:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --border: #1e1e2e;
+    --card: #13131e;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+
+    /* Region accent colors */
+    --hoenn: #48cae4;   /* water/ocean blue */
+    --kanto: #e63946;   /* classic red */
+    --johto: #74c69d;   /* forest green */
+
+    --gold: #f5c518;
+    --orange: #f4845f;
+    --purple: #c77dff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Chakra Petch', monospace;
+    overflow-x: hidden;
+  }
+
+  /* CRT scanlines */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* SVG noise */
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9998; opacity: 0.4;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: relative;
+    text-align: center;
+    padding: 56px 20px 36px;
+    border-bottom: 2px solid var(--border);
+    overflow: hidden;
+  }
+
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 60% at 20% 50%, rgba(72,202,228,0.07) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 60% at 50% 0%,  rgba(245,197,24,0.05) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 60% at 80% 50%, rgba(116,198,157,0.07) 0%, transparent 70%);
+  }
+
+  .header-eyebrow {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: var(--gold);
+    letter-spacing: 4px;
+    margin-bottom: 14px;
+    opacity: 0.8;
+    position: relative;
+  }
+
+  h1 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(14px, 2.8vw, 26px);
+    line-height: 1.7;
+    position: relative;
+    margin-bottom: 10px;
+  }
+
+  h1 span.h { color: var(--hoenn); text-shadow: 2px 2px 0 rgba(72,202,228,0.3); }
+  h1 span.k { color: var(--kanto); text-shadow: 2px 2px 0 rgba(230,57,70,0.3); }
+  h1 span.j { color: var(--johto); text-shadow: 2px 2px 0 rgba(116,198,157,0.3); }
+
+  .header-sub {
+    font-family: 'VT323', monospace;
+    font-size: 20px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    position: relative;
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 10px; height: 16px;
+    background: var(--gold);
+    animation: blink 1s steps(1) infinite;
+    vertical-align: bottom;
+    margin-left: 3px;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ── NAV ── */
+  .nav-bar {
+    display: flex;
+    overflow-x: auto;
+    border-bottom: 2px solid var(--border);
+    padding: 0 20px;
+    scrollbar-width: none;
+  }
+  .nav-bar::-webkit-scrollbar { display: none; }
+
+  .nav-tab {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    padding: 13px 18px;
+    color: var(--muted);
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    letter-spacing: 1px;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .nav-tab:hover { color: var(--text); }
+  .nav-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  /* ── SECTIONS ── */
+  .section {
+    display: none;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    animation: fadeIn 0.3s ease;
+  }
+  .section.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    color: var(--hoenn);
+    letter-spacing: 3px;
+    margin-bottom: 28px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── REGION OVERVIEW CARDS ── */
+  .region-trio {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 36px;
+  }
+
+  .region-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .region-card:hover { transform: translateY(-3px); }
+  .region-card.hoenn:hover { border-color: var(--hoenn); }
+  .region-card.kanto:hover { border-color: var(--kanto); }
+  .region-card.johto:hover { border-color: var(--johto); }
+
+  .region-card-top {
+    padding: 4px 0 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .region-banner {
+    width: 100%;
+    height: 6px;
+  }
+
+  .region-emblem {
+    font-size: 42px;
+    margin: 20px 0 10px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .region-name {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    margin-bottom: 6px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .region-games {
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .region-card-body {
+    padding: 16px 20px 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  .region-desc {
+    font-size: 13px;
+    line-height: 1.75;
+    color: #b0b0c8;
+    margin-bottom: 14px;
+  }
+
+  .stat-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .stat-item {
+    flex: 1;
+    min-width: 80px;
+  }
+
+  .stat-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 5px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+  }
+
+  .pip-row {
+    display: flex;
+    gap: 3px;
+  }
+
+  .pip {
+    width: 9px; height: 9px;
+    border-radius: 1px;
+    background: var(--border);
+  }
+
+  /* ── COMPARE TABLE ── */
+  .cmp-wrap { overflow-x: auto; }
+
+  .cmp-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+    min-width: 640px;
+  }
+
+  .cmp-table th {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    padding: 13px 16px;
+    background: var(--surface);
+    border-bottom: 2px solid var(--border);
+    letter-spacing: 1px;
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .cmp-table th.th-h { color: var(--hoenn); }
+  .cmp-table th.th-k { color: var(--kanto); }
+  .cmp-table th.th-j { color: var(--johto); }
+  .cmp-table th:first-child { color: var(--muted); }
+
+  .cmp-table td {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.6;
+    color: #b0b0c8;
+  }
+
+  .cmp-table tr:hover td { background: rgba(255,255,255,0.015); }
+
+  .cmp-table td:first-child {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 6px;
+    color: var(--gold);
+    white-space: nowrap;
+    width: 150px;
+  }
+
+  /* ── GYM LEADERS ── */
+  .gym-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  @media (max-width: 700px) {
+    .gym-grid { grid-template-columns: 1fr; }
+    .region-trio { grid-template-columns: 1fr; }
+  }
+
+  .gym-col-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .gym-entry {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    font-size: 13px;
+    line-height: 1.5;
+    transition: border-color 0.2s;
+  }
+
+  .gym-num {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: var(--muted);
+    flex-shrink: 0;
+    margin-top: 2px;
+    min-width: 14px;
+  }
+
+  .gym-name { color: var(--text); font-weight: 600; }
+  .gym-type { color: var(--muted); font-size: 12px; }
+
+  .e4-block {
+    margin-top: 14px;
+    background: rgba(245,197,24,0.04);
+    border: 1px solid rgba(245,197,24,0.15);
+    border-radius: 3px;
+    padding: 12px 14px;
+  }
+
+  .e4-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 6px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  .e4-list {
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    color: #b0b0c8;
+    line-height: 1.6;
+  }
+
+  /* ── MUSIC SECTION ── */
+  .music-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .music-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .music-card-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .music-icon { font-size: 22px; }
+
+  .music-region {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+  }
+
+  .track-list {
+    list-style: none;
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .track-list li {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    color: #b0b0c8;
+    line-height: 1.4;
+  }
+
+  .track-list li::before {
+    content: '♪';
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .track-note {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'Chakra Petch', monospace;
+    margin-top: 2px;
+  }
+
+  .composer-block {
+    margin: 0 18px 16px;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 3px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .composer-block strong { color: var(--text); }
+
+  /* ── VERDICT ── */
+  .verdict-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .verdict-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .verdict-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  .verdict-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    margin-bottom: 10px;
+    line-height: 1.8;
+  }
+
+  .verdict-body {
+    font-size: 13px;
+    line-height: 1.75;
+    color: #b0b0c8;
+  }
+
+  .verdict-body strong { color: var(--text); }
+
+  .tag {
+    display: inline-block;
+    font-family: 'VT323', monospace;
+    font-size: 14px;
+    padding: 1px 8px;
+    border-radius: 2px;
+    border: 1px solid;
+    letter-spacing: 1px;
+    margin: 2px 2px 0 0;
+  }
+
+  .quote-block {
+    border-left: 3px solid var(--gold);
+    padding: 12px 16px;
+    background: rgba(245,197,24,0.04);
+    margin: 16px 0;
+    border-radius: 0 4px 4px 0;
+  }
+
+  .quote-text {
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    color: var(--text);
+    line-height: 1.5;
+    margin-bottom: 5px;
+  }
+
+  .quote-src {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  /* footer */
+  footer {
+    text-align: center;
+    padding: 28px;
+    border-top: 1px solid var(--border);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 6px;
+    color: var(--muted);
+    letter-spacing: 2px;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-eyebrow">▶ GBA REGION FIELD GUIDE</div>
+  <h1>
+    <span class="h">HOENN</span> · <span class="k">KANTO</span> · <span class="j">JOHTO</span>
+    <span class="cursor"></span>
+  </h1>
+  <div class="header-sub">map design · story · dex · gyms · music · atmosphere</div>
+</header>
+
+<nav class="nav-bar">
+  <button class="nav-tab active" onclick="switchTab('overview', this)">🗺 Overview</button>
+  <button class="nav-tab" onclick="switchTab('map', this)">📍 Map & Exploration</button>
+  <button class="nav-tab" onclick="switchTab('story', this)">⚔ Story & Villains</button>
+  <button class="nav-tab" onclick="switchTab('dex', this)">📖 Pokédex</button>
+  <button class="nav-tab" onclick="switchTab('gyms', this)">🏟 Gyms & Elite 4</button>
+  <button class="nav-tab" onclick="switchTab('music', this)">🎵 Music</button>
+</nav>
+
+<!-- ════════════ OVERVIEW ════════════ -->
+<section id="overview" class="section active">
+  <div class="section-title">// REGION OVERVIEW</div>
+
+  <div class="region-trio">
+
+    <!-- HOENN -->
+    <div class="region-card hoenn">
+      <div class="region-card-top">
+        <div class="region-banner" style="background: linear-gradient(90deg, var(--hoenn), #0077b6);"></div>
+        <div class="region-emblem">🌊</div>
+        <div class="region-name" style="color:var(--hoenn);">HOENN</div>
+        <div class="region-games">Ruby · Sapphire · Emerald · ORAS</div>
+      </div>
+      <div class="region-card-body">
+        <p class="region-desc">A tropical archipelago based on Kyushu, Japan. Hoenn is defined by its overwhelming water routes, lush rainforests, volcanic peaks, and a dramatic clash between two ancient legendary Pokémon. The most visually distinct of the three GBA regions.</p>
+        <div class="stat-row">
+          <div class="stat-item">
+            <div class="stat-label">EXPLORATION</div>
+            <div class="pip-row">
+              <div class="pip" style="background:var(--hoenn);"></div>
+              <div class="pip" style="background:var(--hoenn);"></div>
+              <div class="pip" style="background:var(--hoenn);"></div>
+              <div class="pip" style="background:var(--hoenn);"></div>
+              <div class="pip" style="background:var(--hoenn);"></div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">STORY</div>
+            <div class="pip-row">
+              <div class="pip" style="background:var(--hoenn);"></div>
+              <div class="pip" style="background:var(--hoenn);"></div>
+              <div class="pip" style="background:var(--hoenn);"></div>
+              <div class="pip" style="background:var(--hoenn);"></div>
+              <div class="pip"></div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">MUSIC</div>
+            <div class="pip-row">
+              <div class="pip" style="background:var(--hoenn);"></div>
+              <div class="pip" style="background:var(--hoenn);"></div>
+              <div class="pip" style="background:var(--hoenn);"></div>
+              <div class="pip" style="background:var(--hoenn);"></div>
+              <div class="pip" style="background:var(--hoenn);"></div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">DEX SIZE</div>
+            <div class="pip-row">
+              <div class="pip" style="background:var(--hoenn);"></div>
+              <div class="pip" style="background:var(--hoenn);"></div>
+              <div class="pip" style="background:var(--hoenn);"></div>
+              <div class="pip" style="background:var(--hoenn);"></div>
+              <div class="pip"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KANTO -->
+    <div class="region-card kanto">
+      <div class="region-card-top">
+        <div class="region-banner" style="background: linear-gradient(90deg, var(--kanto), #9b1d23);"></div>
+        <div class="region-emblem">🔥</div>
+        <div class="region-name" style="color:var(--kanto);">KANTO</div>
+        <div class="region-games">Red · Blue · Yellow · FireRed · LeafGreen</div>
+      </div>
+      <div class="region-card-body">
+        <p class="region-desc">The original Pokémon region based on the Kantō region of Japan. Compact, linear, and iconic — Kanto's design is deliberately straightforward, built to introduce players to the Pokémon formula. FireRed/LeafGreen on GBA gave it a complete visual and QoL overhaul.</p>
+        <div class="stat-row">
+          <div class="stat-item">
+            <div class="stat-label">EXPLORATION</div>
+            <div class="pip-row">
+              <div class="pip" style="background:var(--kanto);"></div>
+              <div class="pip" style="background:var(--kanto);"></div>
+              <div class="pip" style="background:var(--kanto);"></div>
+              <div class="pip"></div>
+              <div class="pip"></div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">STORY</div>
+            <div class="pip-row">
+              <div class="pip" style="background:var(--kanto);"></div>
+              <div class="pip" style="background:var(--kanto);"></div>
+              <div class="pip"></div>
+              <div class="pip"></div>
+              <div class="pip"></div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">MUSIC</div>
+            <div class="pip-row">
+              <div class="pip" style="background:var(--kanto);"></div>
+              <div class="pip" style="background:var(--kanto);"></div>
+              <div class="pip" style="background:var(--kanto);"></div>
+              <div class="pip" style="background:var(--kanto);"></div>
+              <div class="pip"></div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">DEX SIZE</div>
+            <div class="pip-row">
+              <div class="pip" style="background:var(--kanto);"></div>
+              <div class="pip" style="background:var(--kanto);"></div>
+              <div class="pip"></div>
+              <div class="pip"></div>
+              <div class="pip"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JOHTO -->
+    <div class="region-card johto">
+      <div class="region-card-top">
+        <div class="region-banner" style="background: linear-gradient(90deg, var(--johto), #2d6a4f);"></div>
+        <div class="region-emblem">🌿</div>
+        <div class="region-name" style="color:var(--johto);">JOHTO</div>
+        <div class="region-games">Gold · Silver · Crystal · HGSS</div>
+      </div>
+      <div class="region-card-body">
+        <p class="region-desc">Based on the Kansai region of Japan, Johto blends ancient tradition with modernity. Slower-paced and atmospheric, it excels in worldbuilding, lore, and music. Notably, the GBA-era Johto game remains in development — HGSS on DS is its definitive form so far.</p>
+        <div class="stat-row">
+          <div class="stat-item">
+            <div class="stat-label">EXPLORATION</div>
+            <div class="pip-row">
+              <div class="pip" style="background:var(--johto);"></div>
+              <div class="pip" style="background:var(--johto);"></div>
+              <div class="pip" style="background:var(--johto);"></div>
+              <div class="pip" style="background:var(--johto);"></div>
+              <div class="pip"></div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">STORY</div>
+            <div class="pip-row">
+              <div class="pip" style="background:var(--johto);"></div>
+              <div class="pip" style="background:var(--johto);"></div>
+              <div class="pip" style="background:var(--johto);"></div>
+              <div class="pip"></div>
+              <div class="pip"></div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">MUSIC</div>
+            <div class="pip-row">
+              <div class="pip" style="background:var(--johto);"></div>
+              <div class="pip" style="background:var(--johto);"></div>
+              <div class="pip" style="background:var(--johto);"></div>
+              <div class="pip" style="background:var(--johto);"></div>
+              <div class="pip" style="background:var(--johto);"></div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">DEX SIZE</div>
+            <div class="pip-row">
+              <div class="pip" style="background:var(--johto);"></div>
+              <div class="pip" style="background:var(--johto);"></div>
+              <div class="pip" style="background:var(--johto);"></div>
+              <div class="pip"></div>
+              <div class="pip"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Quick verdict -->
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:4px;padding:24px;">
+    <div style="font-family:'Press Start 2P';font-size:8px;color:var(--gold);margin-bottom:16px;letter-spacing:2px;">// QUICK IDENTITY</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;font-size:13px;color:#b0b0c8;line-height:1.75;">
+      <div><strong style="color:var(--hoenn);">HOENN</strong> is the <em>adventurer's</em> region — massive, lush, and full of secrets. Best for players who love exploration, diving into hidden caves, and a chaotic dex full of new Pokémon.</div>
+      <div><strong style="color:var(--kanto);">KANTO</strong> is the <em>original</em> — lean, iconic, and built for speed. Best for newcomers or players chasing nostalgia. FireRed/LeafGreen remain the cleanest GBA entry points.</div>
+      <div><strong style="color:var(--johto);">JOHTO</strong> is the <em>atmosphere</em> region — slow-burn lore, Bell Tower, Burned Tower, Lugia and Ho-Oh mythology. Best for players who love world flavor and music above everything.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ MAP ════════════ -->
+<section id="map" class="section">
+  <div class="section-title">// MAP DESIGN & EXPLORATION</div>
+  <div class="cmp-wrap">
+    <table class="cmp-table">
+      <thead>
+        <tr>
+          <th>CATEGORY</th>
+          <th class="th-h">🌊 HOENN</th>
+          <th class="th-k">🔥 KANTO</th>
+          <th class="th-j">🌿 JOHTO</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>REAL WORLD INSPIRATION</td>
+          <td>Kyushu, Japan</td>
+          <td>Kantō, Japan</td>
+          <td>Kansai, Japan</td>
+        </tr>
+        <tr>
+          <td>MAP SIZE</td>
+          <td>Very large — most routes</td>
+          <td>Compact & linear</td>
+          <td>Medium — interconnected</td>
+        </tr>
+        <tr>
+          <td>WATER ROUTES</td>
+          <td style="color:var(--hoenn);">Dominant — over 40% water</td>
+          <td>Moderate</td>
+          <td>Some — less prominent</td>
+        </tr>
+        <tr>
+          <td>HIDDEN AREAS</td>
+          <td style="color:var(--hoenn);">Extensive — Dive spots, secret bases</td>
+          <td>Moderate — dungeons, Cerulean Cave</td>
+          <td>Good — ruins, Whirl Islands, Ice Path</td>
+        </tr>
+        <tr>
+          <td>TERRAIN VARIETY</td>
+          <td style="color:var(--hoenn);">Ocean, jungle, volcano, desert, cave</td>
+          <td>City, cave, sea, forest</td>
+          <td>Mountain, forest, ruin, sea, city</td>
+        </tr>
+        <tr>
+          <td>SECRET BASES</td>
+          <td style="color:var(--hoenn);">✓ Yes — full customization</td>
+          <td>✗ No</td>
+          <td>✗ No (GBC only)</td>
+        </tr>
+        <tr>
+          <td>UNDERWATER ROUTES</td>
+          <td style="color:var(--hoenn);">✓ Unique to Hoenn (Dive HM)</td>
+          <td>✗ No</td>
+          <td>✗ No</td>
+        </tr>
+        <tr>
+          <td>NOTABLE LOCATIONS</td>
+          <td>Sky Pillar, Seafloor Cavern, Mt. Pyre, Battle Frontier</td>
+          <td>Cerulean Cave, Silph Co., Victory Road, Pokémon Tower</td>
+          <td>Bell Tower, Burned Tower, Mt. Silver, Ruins of Alph, Whirl Islands</td>
+        </tr>
+        <tr>
+          <td>TOWN COUNT</td>
+          <td>17 cities/towns</td>
+          <td>11 cities/towns</td>
+          <td>10 cities/towns (+Kanto in GSC)</td>
+        </tr>
+        <tr>
+          <td>LINEARITY</td>
+          <td>Moderate — some branching</td>
+          <td style="color:var(--kanto);">High — mostly linear</td>
+          <td>Low — very open, multiple routes</td>
+        </tr>
+        <tr>
+          <td>EXPLORATION VERDICT</td>
+          <td style="color:var(--hoenn);">Best raw exploration</td>
+          <td>Most straightforward</td>
+          <td style="color:var(--johto);">Best atmosphere while exploring</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="quote-block" style="margin-top:24px;">
+    <div class="quote-text">Hoenn's sheer scale — from the depths of the ocean to the top of Sky Pillar — makes it the most physically ambitious region of the GBA era by a wide margin.</div>
+    <div class="quote-src">— Community consensus, r/pokemon</div>
+  </div>
+</section>
+
+<!-- ════════════ STORY ════════════ -->
+<section id="story" class="section">
+  <div class="section-title">// STORY & VILLAIN TEAMS</div>
+  <div class="cmp-wrap">
+    <table class="cmp-table">
+      <thead>
+        <tr>
+          <th>ELEMENT</th>
+          <th class="th-h">🌊 HOENN</th>
+          <th class="th-k">🔥 KANTO</th>
+          <th class="th-j">🌿 JOHTO</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>VILLAIN TEAM</td>
+          <td>Team Magma & Team Aqua (dual)</td>
+          <td>Team Rocket</td>
+          <td>Team Rocket (remnants)</td>
+        </tr>
+        <tr>
+          <td>VILLAIN GOAL</td>
+          <td>Expand land / Expand sea — awaken Groudon/Kyogre</td>
+          <td>Criminal empire — steal Pokémon for profit</td>
+          <td>Revive Team Rocket, reach Giovanni</td>
+        </tr>
+        <tr>
+          <td>VILLAIN DEPTH</td>
+          <td style="color:var(--hoenn);">High — competing ideologies, tragic logic</td>
+          <td>Moderate — classic crime org</td>
+          <td>Low — feels like an epilogue subplot</td>
+        </tr>
+        <tr>
+          <td>RIVAL</td>
+          <td>May/Brendan — friendly, supportive</td>
+          <td>Blue/Gary — aggressive, dismissive</td>
+          <td>Silver — brooding, antagonistic</td>
+        </tr>
+        <tr>
+          <td>RIVAL QUALITY</td>
+          <td>Weakest — too friendly, no real tension</td>
+          <td style="color:var(--kanto);">Iconic — "Smell ya later"</td>
+          <td style="color:var(--johto);">Best — actual character arc and redemption</td>
+        </tr>
+        <tr>
+          <td>LEGENDARY ROLE</td>
+          <td style="color:var(--hoenn);">Central — Groudon/Kyogre reshape the world</td>
+          <td>Minimal — Mewtwo is postgame only</td>
+          <td style="color:var(--johto);">Deep lore — Lugia/Ho-Oh tied to mythology</td>
+        </tr>
+        <tr>
+          <td>CLIMAX</td>
+          <td>Stop weather apocalypse at Cave of Origin</td>
+          <td>Defeat Team Rocket at Silph Co. / Pokémon Tower</td>
+          <td>Confront Rocket at Radio Tower, awaken Ho-Oh/Lugia</td>
+        </tr>
+        <tr>
+          <td>NARRATIVE TONE</td>
+          <td>Elemental conflict, nature vs ambition</td>
+          <td>Classic hero journey, defeating crime</td>
+          <td>Legacy, mythology, broken families</td>
+        </tr>
+        <tr>
+          <td>POST-GAME CONTENT</td>
+          <td style="color:var(--hoenn);">Battle Frontier (Emerald) — best in series</td>
+          <td>Sevii Islands (FRLG) — added story</td>
+          <td style="color:var(--johto);">Full Kanto region — doubles the game</td>
+        </tr>
+        <tr>
+          <td>STORY VERDICT</td>
+          <td style="color:var(--hoenn);">Best villain team & stakes</td>
+          <td>Most iconic, least complex</td>
+          <td style="color:var(--johto);">Best rival & legendary lore</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:24px;">
+    <div style="background:var(--card);border:1px solid rgba(72,202,228,0.2);border-radius:4px;padding:16px;">
+      <div style="font-family:'Press Start 2P';font-size:6px;color:var(--hoenn);margin-bottom:8px;">TEAM AQUA / MAGMA</div>
+      <div style="font-size:13px;color:#b0b0c8;line-height:1.7;">The only games to pit two villain teams against each other. Both have internally consistent (if extreme) environmentalist logic — expanding sea for aquatic life vs expanding land for terrestrial life. Archie and Maxie remain compelling antagonists.</div>
+    </div>
+    <div style="background:var(--card);border:1px solid rgba(230,57,70,0.2);border-radius:4px;padding:16px;">
+      <div style="font-family:'Press Start 2P';font-size:6px;color:var(--kanto);margin-bottom:8px;">TEAM ROCKET</div>
+      <div style="font-size:13px;color:#b0b0c8;line-height:1.7;">The original crime syndicate. Giovanni is the first Pokémon villain with real weight. Team Rocket's goal — pure profit — is simple but grounded. Their gym leader disguise and Silph Co. takeover remain two of the most tense moments in the series.</div>
+    </div>
+    <div style="background:var(--card);border:1px solid rgba(116,198,157,0.2);border-radius:4px;padding:16px;">
+      <div style="font-family:'Press Start 2P';font-size:6px;color:var(--johto);margin-bottom:8px;">SILVER & TEAM ROCKET</div>
+      <div style="font-size:13px;color:#b0b0c8;line-height:1.7;">Johto's true story strength lies in Silver — a rival who hates weakness, steals his starter, and slowly confronts why he became that way. His arc mirrors the player's own journey and delivers the most emotionally resonant rival ending in any mainline game.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ DEX ════════════ -->
+<section id="dex" class="section">
+  <div class="section-title">// POKÉDEX & AVAILABILITY</div>
+  <div class="cmp-wrap">
+    <table class="cmp-table">
+      <thead>
+        <tr>
+          <th>CATEGORY</th>
+          <th class="th-h">🌊 HOENN</th>
+          <th class="th-k">🔥 KANTO</th>
+          <th class="th-j">🌿 JOHTO</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>REGIONAL DEX SIZE</td>
+          <td style="color:var(--hoenn);">202 Pokémon (RS) / 210 (Emerald)</td>
+          <td>151 Pokémon</td>
+          <td>251 Pokémon (includes Kanto)</td>
+        </tr>
+        <tr>
+          <td>GENERATION</td>
+          <td>Gen III — 135 new Pokémon</td>
+          <td>Gen I — 151 new Pokémon</td>
+          <td>Gen II — 100 new Pokémon</td>
+        </tr>
+        <tr>
+          <td>STARTER OPTIONS</td>
+          <td>Treecko · Torchic · Mudkip</td>
+          <td>Bulbasaur · Charmander · Squirtle</td>
+          <td>Chikorita · Cyndaquil · Totodile</td>
+        </tr>
+        <tr>
+          <td>STARTER QUALITY</td>
+          <td style="color:var(--hoenn);">Fan-favourite trio — Blaziken hugely popular</td>
+          <td style="color:var(--kanto);">The iconic originals — most recognisable</td>
+          <td>Divisive — Chikorita often criticised</td>
+        </tr>
+        <tr>
+          <td>PSEUDO-LEGENDARY</td>
+          <td>Salamence · Metagross</td>
+          <td>Dragonite</td>
+          <td>Tyranitar</td>
+        </tr>
+        <tr>
+          <td>LEGENDARIES</td>
+          <td style="color:var(--hoenn);">Groudon, Kyogre, Rayquaza + many more</td>
+          <td>Articuno, Zapdos, Moltres, Mewtwo, Mew</td>
+          <td>Lugia, Ho-Oh, Raikou, Entei, Suicune, Celebi</td>
+        </tr>
+        <tr>
+          <td>DEX VARIETY</td>
+          <td style="color:var(--hoenn);">Highest — dual types, diverse biomes</td>
+          <td>Foundational — classic archetypes</td>
+          <td>Moderate — many evolutions of Gen I</td>
+        </tr>
+        <tr>
+          <td>NOTABLE NEW TYPES</td>
+          <td>Steel, Dark (from Gen II), new designs</td>
+          <td>Original 15 types only</td>
+          <td>Steel & Dark introduced in Gen II</td>
+        </tr>
+        <tr>
+          <td>COMPETITIVE IMPACT</td>
+          <td style="color:var(--hoenn);">Massive — Blaziken, Salamence, Metagross shaped metagame</td>
+          <td style="color:var(--kanto);">Foundational — Alakazam, Gengar, Tauros etc.</td>
+          <td>Strong — Tyranitar, Blissey, Espeon/Umbreon</td>
+        </tr>
+        <tr>
+          <td>EARLY GAME ACCESS</td>
+          <td>Limited until Surf — coverage gaps early</td>
+          <td style="color:var(--kanto);">Good variety from Route 1 onward</td>
+          <td>Restricted — many Pokémon locked late</td>
+        </tr>
+        <tr>
+          <td>DEX VERDICT</td>
+          <td style="color:var(--hoenn);">Best variety & new designs</td>
+          <td>Most iconic individually</td>
+          <td>Best mythological legendaries</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ════════════ GYMS ════════════ -->
+<section id="gyms" class="section">
+  <div class="section-title">// GYM LEADERS & ELITE FOUR</div>
+
+  <div class="gym-grid">
+
+    <!-- HOENN -->
+    <div>
+      <div class="gym-col-title" style="color:var(--hoenn);border-color:var(--hoenn);">
+        🌊 HOENN
+      </div>
+      <div class="gym-entry" style="border-left: 3px solid var(--hoenn);">
+        <div class="gym-num">01</div>
+        <div><div class="gym-name">Roxanne</div><div class="gym-type">Rock — Rustboro City</div></div>
+      </div>
+      <div class="gym-entry" style="border-left: 3px solid var(--hoenn);">
+        <div class="gym-num">02</div>
+        <div><div class="gym-name">Brawly</div><div class="gym-type">Fighting — Dewford Town</div></div>
+      </div>
+      <div class="gym-entry" style="border-left: 3px solid var(--hoenn);">
+        <div class="gym-num">03</div>
+        <div><div class="gym-name">Wattson</div><div class="gym-type">Electric — Mauville City</div></div>
+      </div>
+      <div class="gym-entry" style="border-left: 3px solid var(--hoenn);">
+        <div class="gym-num">04</div>
+        <div><div class="gym-name">Flannery</div><div class="gym-type">Fire — Lavaridge Town</div></div>
+      </div>
+      <div class="gym-entry" style="border-left: 3px solid var(--hoenn);">
+        <div class="gym-num">05</div>
+        <div><div class="gym-name">Norman</div><div class="gym-type">Normal — Petalburg City (your dad)</div></div>
+      </div>
+      <div class="gym-entry" style="border-left: 3px solid var(--hoenn);">
+        <div class="gym-num">06</div>
+        <div><div class="gym-name">Winona</div><div class="gym-type">Flying — Fortree City</div></div>
+      </div>
+      <div class="gym-entry" style="border-left: 3px solid var(--hoenn);">
+        <div class="gym-num">07</div>
+        <div><div class="gym-name">Tate & Liza</div><div class="gym-type">Psychic — Mossdeep City (doubles)</div></div>
+      </div>
+      <div class="gym-entry" style="border-left: 3px solid var(--hoenn);">
+        <div class="gym-num">08</div>
+        <div><div class="gym-name">Wallace / Juan</div><div class="gym-type">Water — Sootopolis City</div></div>
+      </div>
+      <div class="e4-block">
+        <div class="e4-title">ELITE FOUR + CHAMPION</div>
+        <div class="e4-list">
+          Sidney (Dark) · Phoebe (Ghost)<br>
+          Glacia (Ice) · Drake (Dragon)<br>
+          <span style="color:var(--hoenn);">Champion: Steven / Wallace</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- KANTO -->
+    <div>
+      <div class="gym-col-title" style="color:var(--kanto);border-color:var(--kanto);">
+        🔥 KANTO
+      </div>
+      <div class="gym-entry" style="border-left: 3px solid var(--kanto);">
+        <div class="gym-num">01</div>
+        <div><div class="gym-name">Brock</div><div class="gym-type">Rock — Pewter City</div></div>
+      </div>
+      <div class="gym-entry" style="border-left: 3px solid var(--kanto);">
+        <div class="gym-num">02</div>
+        <div><div class="gym-name">Misty</div><div class="gym-type">Water — Cerulean City</div></div>
+      </div>
+      <div class="gym-entry" style="border-left: 3px solid var(--kanto);">
+        <div class="gym-num">03</div>
+        <div><div class="gym-name">Lt. Surge</div><div class="gym-type">Electric — Vermilion City</div></div>
+      </div>
+      <div class="gym-entry" style="border-left: 3px solid var(--kanto);">
+        <div class="gym-num">04</div>
+        <div><div class="gym-name">Erika</div><div class="gym-type">Grass — Celadon City</div></div>
+      </div>
+      <div class="gym-entry" style="border-left: 3px solid var(--kanto);">
+        <div class="gym-num">05</div>
+        <div><div class="gym-name">Koga</div><div class="gym-type">Poison — Fuchsia City</div></div>
+      </div>
+      <div class="gym-entry" style="border-left: 3px solid var(--kanto);">
+        <div class="gym-num">06</div>
+        <div><div class="gym-name">Sabrina</div><div class="gym-type">Psychic — Saffron City</div></div>
+      </div>
+      <div class="gym-entry" style="border-left: 3px solid var(--kanto);">
+        <div class="gym-num">07</div>
+        <div><div class="gym-name">Blaine</div><div class="gym-type">Fire — Cinnabar Island</div></div>
+      </div>
+      <div class="gym-entry" style="border-left: 3px solid var(--kanto);">
+        <div class="gym-num">08</div>
+        <div><div class="gym-name">Giovanni</div><div class="gym-type">Ground — Viridian City</div></div>
+      </div>
+      <div class="e4-block">
+        <div class="e4-title">ELITE FOUR + CHAMPION</div>
+        <div class="e4-list">
+          Lorelei (Ice) · Bruno (Fighting)<br>
+          Agatha (Ghost) · Lance (Dragon)<br>
+          <span style="color:var(--kanto);">Champion: Blue (Gary)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- JOHTO -->
+    <div>
+      <div class="gym-col-title" style="color:var(--johto);border-color:var(--johto);">
+        🌿 JOHTO
+      </div>
+      <div class="gym-entry" style="border-left: 3px solid var(--johto);">
+        <div class="gym-num">01</div>
+        <div><div class="gym-name">Falkner</div><div class="gym-type">Flying — Violet City</div></div>
+      </div>
+      <div class="gym-entry" style="border-left: 3px solid var(--johto);">
+        <div class="gym-num">02</div>
+        <div><div class="gym-name">Bugsy</div><div class="gym-type">Bug — Azalea Town</div></div>
+      </div>
+      <div class="gym-entry" style="border-left: 3px solid var(--johto);">
+        <div class="gym-num">03</div>
+        <div><div class="gym-name">Whitney</div><div class="gym-type">Normal — Goldenrod City (infamous Miltank)</div></div>
+      </div>
+      <div class="gym-entry" style="border-left: 3px solid var(--johto);">
+        <div class="gym-num">04</div>
+        <div><div class="gym-name">Morty</div><div class="gym-type">Ghost — Ecruteak City</div></div>
+      </div>
+      <div class="gym-entry" style="border-left: 3px solid var(--johto);">
+        <div class="gym-num">05</div>
+        <div><div class="gym-name">Chuck</div><div class="gym-type">Fighting — Cianwood City</div></div>
+      </div>
+      <div class="gym-entry" style="border-left: 3px solid var(--johto);">
+        <div class="gym-num">06</div>
+        <div><div class="gym-name">Jasmine</div><div class="gym-type">Steel — Olivine City</div></div>
+      </div>
+      <div class="gym-entry" style="border-left: 3px solid var(--johto);">
+        <div class="gym-num">07</div>
+        <div><div class="gym-name">Pryce</div><div class="gym-type">Ice — Mahogany Town</div></div>
+      </div>
+      <div class="gym-entry" style="border-left: 3px solid var(--johto);">
+        <div class="gym-num">08</div>
+        <div><div class="gym-name">Clair</div><div class="gym-type">Dragon — Blackthorn City</div></div>
+      </div>
+      <div class="e4-block">
+        <div class="e4-title">ELITE FOUR + CHAMPION</div>
+        <div class="e4-list">
+          Will (Psychic) · Koga (Poison)<br>
+          Bruno (Fighting) · Karen (Dark)<br>
+          <span style="color:var(--johto);">Champion: Lance</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:4px;padding:20px;margin-top:24px;">
+    <div style="font-family:'Press Start 2P';font-size:7px;color:var(--gold);margin-bottom:12px;">GYM DESIGN NOTES</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;font-size:13px;color:#b0b0c8;line-height:1.7;">
+      <div><strong style="color:var(--hoenn);">Hoenn</strong> has the most creative gym puzzles — rotating floors, warp tiles, trick rooms — and uniquely features a doubles battle (Tate & Liza) and your own father as a gym leader.</div>
+      <div><strong style="color:var(--kanto);">Kanto</strong> gyms are iconic but mechanically simple by modern standards. Giovanni as the final gym leader — secretly Team Rocket's boss — is still one of the best narrative twists in the series.</div>
+      <div><strong style="color:var(--johto);">Johto</strong> is famous for Whitney's Miltank — arguably the most notorious gym leader battle in Pokémon history. Jasmine and Clair also have memorable personality-driven arcs surrounding their battles.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ MUSIC ════════════ -->
+<section id="music" class="section">
+  <div class="section-title">// MUSIC & ATMOSPHERE</div>
+
+  <div class="music-grid">
+
+    <!-- HOENN -->
+    <div class="music-card">
+      <div class="music-card-header" style="border-left: 4px solid var(--hoenn);">
+        <div class="music-icon">🌊</div>
+        <div>
+          <div class="music-region" style="color:var(--hoenn);">HOENN — GEN III GBA</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px;">Composer: Go Ichinose, Morikazu Aoki</div>
+        </div>
+      </div>
+      <ul class="track-list">
+        <li style="color:var(--hoenn);">Route 120 — Melancholic, layered, cinematic
+          <div class="track-note">One of the most beloved overworld tracks in the series</div>
+        </li>
+        <li>Littleroot Town — Soft, warm, nostalgic
+          <div class="track-note">Perfectly captures a quiet hometown feeling</div>
+        </li>
+        <li>Battle! Team Aqua/Magma — Urgent and synth-heavy
+          <div class="track-note">GBA sound chip used to full effect</div>
+        </li>
+        <li>Battle! Vs. Kyogre/Groudon — Apocalyptic intensity
+          <div class="track-note">Matches the world-ending stakes of the encounter</div>
+        </li>
+        <li>Sealed Chamber — Eerie, ancient, mysterious
+          <div class="track-note">Best "hidden lore" track in the series</div>
+        </li>
+      </ul>
+      <div class="composer-block">
+        <strong>Atmosphere:</strong> Tropical, mysterious, occasionally melancholic. Hoenn's soundtrack leans into its oceanic identity — ambient, expansive, with a sense of hidden depths. The GBA hardware limitation was used creatively, resulting in tracks that feel richer than their chip count should allow.
+      </div>
+    </div>
+
+    <!-- KANTO -->
+    <div class="music-card">
+      <div class="music-card-header" style="border-left: 4px solid var(--kanto);">
+        <div class="music-icon">🔥</div>
+        <div>
+          <div class="music-region" style="color:var(--kanto);">KANTO — GEN I / FRLG</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px;">Composer: Junichi Masuda</div>
+        </div>
+      </div>
+      <ul class="track-list">
+        <li style="color:var(--kanto);">Pallet Town — Simple, iconic, home
+          <div class="track-note">One of gaming's most recognisable themes ever</div>
+        </li>
+        <li>Lavender Town — Unsettling, haunting
+          <div class="track-note">Became internet legend for its eerie tone</div>
+        </li>
+        <li>Battle! Trainer — Energetic, punchy
+          <div class="track-note">The template every future trainer theme followed</div>
+        </li>
+        <li>Pokémon Tower — Solemn and ghostly
+          <div class="track-note">Atmosphere perfectly matched to location</div>
+        </li>
+        <li>Cerulean City — Breezy and uplifting
+          <div class="track-note">FRLG remake version especially strong</div>
+        </li>
+      </ul>
+      <div class="composer-block">
+        <strong>Atmosphere:</strong> Foundational and iconic. Kanto's music defined what Pokémon sounds like. Every theme is simple by design — Game Boy hardware was the constraint. FireRed/LeafGreen on GBA faithfully remasters these tracks with richer instrumentation while preserving all the original melodies.
+      </div>
+    </div>
+
+    <!-- JOHTO -->
+    <div class="music-card">
+      <div class="music-card-header" style="border-left: 4px solid var(--johto);">
+        <div class="music-icon">🌿</div>
+        <div>
+          <div class="music-region" style="color:var(--johto);">JOHTO — GEN II / HGSS</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px;">Composer: Go Ichinose, Junichi Masuda</div>
+        </div>
+      </div>
+      <ul class="track-list">
+        <li style="color:var(--johto);">Ecruteak City — Traditional Japanese, haunting
+          <div class="track-note">Best city theme in the entire series by many accounts</div>
+        </li>
+        <li>Ho-Oh / Lugia Battle — Sacred, mythological weight
+          <div class="track-note">Perfectly communicates the legendary status of both Pokémon</div>
+        </li>
+        <li>National Park — Peaceful, chirpy, charming
+          <div class="track-note">Beloved Bug Catching Contest backdrop</div>
+        </li>
+        <li>Team Rocket HQ — Mechanical, menacing
+          <div class="track-note">Industrial tone contrasts with Johto's natural feel</div>
+        </li>
+        <li>Mt. Silver — Lonely, vast, sparse
+          <div class="track-note">Perfectly sets up the final encounter with Red</div>
+        </li>
+      </ul>
+      <div class="composer-block">
+        <strong>Atmosphere:</strong> Johto's OST is widely considered the series' peak for atmosphere. Traditional Japanese instrumentation, slow builds, and a strong sense of place. The Ecruteak/Bell Tower area in particular creates an unmatched sense of ancient mystery. HGSS remasters elevated an already extraordinary soundtrack.
+      </div>
+    </div>
+
+  </div>
+
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:4px;padding:20px;margin-top:20px;">
+    <div style="font-family:'Press Start 2P';font-size:7px;color:var(--gold);margin-bottom:12px;">MUSIC VERDICT</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;font-size:13px;color:#b0b0c8;line-height:1.75;">
+      <div><strong style="color:var(--hoenn);">Hoenn</strong> wins on <em>variety and cinematic scope</em>. The GBA hardware was used at its ceiling — Route 120 alone makes a case for Gen III having the best overworld music.</div>
+      <div><strong style="color:var(--kanto);">Kanto</strong> wins on <em>cultural impact</em>. Pallet Town and Lavender Town are two of the most recognised pieces of video game music ever composed, despite their simplicity.</div>
+      <div><strong style="color:var(--johto);">Johto</strong> wins on <em>atmosphere and cohesion</em>. The entire OST feels like one deliberate world — ancient, melancholic, and alive. Ecruteak City is the series' finest single track.</div>
+    </div>
+  </div>
+</section>
+
+<footer>GBA ERA POKÉMON REGIONS · HOENN · KANTO · JOHTO · COMPILED 2026</footer>
+
+<script>
+  function switchTab(id, el) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    el.classList.add('active');
+  }
+</script>
+</body>
+</html>
